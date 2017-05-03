@@ -17,10 +17,10 @@ public class PingUtil {
     private static ArrayList<String> ipPingResults = new ArrayList<>();
 
     /**
-     * 获取由ping url得到的IP地址
+     * Get ip from given url
      *
-     * @param url 需要ping的url地址
-     * @return url的IP地址 如 192.168.0.1
+     * @param url url needs to ping
+     * @return url's IP address such as 192.168.0.1
      */
     public static String getIPFromUrl(String url) {
         String domain = getDomain(url);
@@ -51,8 +51,7 @@ public class PingUtil {
     }
 
     /**
-     * ping一次给予的url，获取TTL
-     *
+     * ping once for the given url,returns ttl of this ping action
      * @param url
      * @return
      */
@@ -85,8 +84,7 @@ public class PingUtil {
     }
 
     /**
-     * 获取耗时
-     *
+     * get time used in ping
      * @param url
      * @return
      */
