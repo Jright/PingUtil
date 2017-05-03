@@ -16,6 +16,20 @@ public class PingUtil {
     private static final String PING_FAIL_RESULT = "-1";
     private static ArrayList<String> ipPingResults = new ArrayList<>();
 
+
+    //    Success
+    //    PING 150.xxx.xxx.27 (150.xxx.xxx.27) 56(84) bytes of data.
+    //    64 bytes from 150.xxx.xxx.27: icmp_seq=1 ttl=47 time=66.5 ms
+    //    --- 150.xxx.xxx.27 ping statistics ---
+    //    1 packets transmitted, 1 received, 0% packet loss, time 0ms
+    //    rtt min/avg/max/mdev = 66.509/66.509/66.509/0.000 ms
+
+    //    Fail
+    //    PING 61.xxx.xxx.106 (61.xxx.xxx.106) 56(84) bytes of data.
+    //    --- 61.xxx.xxx.106 ping statistics ---
+    //    100 packets transmitted, 0 received, 100% packet loss, time 99005ms
+
+
     /**
      * Get ip from given url
      *
@@ -162,27 +176,40 @@ public class PingUtil {
 
     public static String getMaxElapseTime(String resultString) {
         if (null != resultString && resultString.length() != 0) {
-            String tempInfo = resultString.substring(resultString.indexOf("min/avg/max/mdev") + 19);
-            String[] temps = tempInfo.split("/");
-            return String.valueOf(Float.valueOf(temps[2]));
+            //Failed result does not contain this charsequence
+            if(resultString.contains("min/avg/max/mdev")){
+                String tempInfo = resultString.substring(resultString.indexOf("min/avg/max/mdev") + 19);
+                String[] temps = tempInfo.split("/");
+                return String.valueOf(Float.valueOf(temps[2]));
+            }else{
+                return PING_FAIL_RESULT;
+            }
         }
         return PING_FAIL_RESULT;
     }
 
     public static String getMinElapseTime(String resultString) {
         if (null != resultString && resultString.length() != 0) {
-            String tempInfo = resultString.substring(resultString.indexOf("min/avg/max/mdev") + 19);
-            String[] temps = tempInfo.split("/");
-            return String.valueOf(Float.valueOf(temps[0]));
+            if(resultString.contains("min/avg/max/mdev")){
+                String tempInfo = resultString.substring(resultString.indexOf("min/avg/max/mdev") + 19);
+                String[] temps = tempInfo.split("/");
+                return String.valueOf(Float.valueOf(temps[0]));
+            }else{
+                return PING_FAIL_RESULT;
+            }
         }
         return PING_FAIL_RESULT;
     }
 
     public static String getAveElapseTime(String resultString) {
         if (null != resultString && resultString.length() != 0) {
-            String tempInfo = resultString.substring(resultString.indexOf("min/avg/max/mdev") + 19);
-            String[] temps = tempInfo.split("/");
-            return String.valueOf(Float.valueOf(temps[1]));
+            if(resultString.contains("min/avg/max/mdev")){
+                String tempInfo = resultString.substring(resultString.indexOf("min/avg/max/mdev") + 19);
+                String[] temps = tempInfo.split("/");
+                return String.valueOf(Float.valueOf(temps[1]));
+            }else{
+                return PING_FAIL_RESULT;
+            }
         }
         return PING_FAIL_RESULT;
     }
