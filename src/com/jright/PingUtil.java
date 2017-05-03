@@ -1,14 +1,11 @@
 package com.jright;
 
-import sun.rmi.runtime.Log;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.*;
-import java.util.regex.Pattern;
 
 public class PingUtil {
 
@@ -20,114 +17,34 @@ public class PingUtil {
     //    Success
     //    PING 150.xxx.xxx.27 (150.xxx.xxx.27) 56(84) bytes of data.
     //    64 bytes from 150.xxx.xxx.27: icmp_seq=1 ttl=47 time=66.5 ms
-    //    --- 150.xxx.xxx.27 ping statistics ---
+    //    --- 150.xxx.xxx.27 asyncPing statistics ---
     //    1 packets transmitted, 1 received, 0% packet loss, time 0ms
     //    rtt min/avg/max/mdev = 66.509/66.509/66.509/0.000 ms
 
     //    Fail
     //    PING 61.xxx.xxx.106 (61.xxx.xxx.106) 56(84) bytes of data.
-    //    --- 61.xxx.xxx.106 ping statistics ---
+    //    --- 61.xxx.xxx.106 asyncPing statistics ---
     //    100 packets transmitted, 0 received, 100% packet loss, time 99005ms
 
-
-    /**
-     * Get ip from given url
-     *
-     * @param url url needs to ping
-     * @return url's IP address such as 192.168.0.1
-     */
-    public static String getIPFromUrl(String url) {
+    //get ping result then process later
+    public static void asyncGetPingResult(String url, final OnPingResultListener onPingResultListener){
         String domain = getDomain(url);
         if (null == domain) {
-            return null;
+            return;
         }
-        ping(createSimplePingCommand(1, 100, domain), new OnPingResult() {
+        asyncPing(createSimplePingCommand(1, 100, domain), new OnPingResultListener() {
             @Override
             public String onPingSuccess(String pingResult) {
-                if (null != pingResult) {
-                    try {
-                        String tempInfo = pingResult.substring(pingResult.indexOf("("));
-                        String ip = tempInfo.substring(1, tempInfo.indexOf(")"));
-                        return ip;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-                return PING_FAIL_RESULT;
+                onPingResultListener.onPingSuccess(pingResult);
+                return null;
             }
 
             @Override
             public String onPingFailure() {
-                return PING_FAIL_RESULT;
+                onPingResultListener.onPingFailure();
+                return null;
             }
         });
-        return PING_FAIL_RESULT;
-    }
-
-    /**
-     * ping once for the given url,returns ttl of this ping action
-     * @param url
-     * @return
-     */
-    public static String getTTL(String url) {
-        String domain = getDomain(url);
-        if (null == domain) {
-            return PING_FAIL_RESULT;
-        }
-        ping(createSimplePingCommand(1, 100, domain), new OnPingResult() {
-            @Override
-            public String onPingSuccess(String pingResult) {
-                if (null != pingResult) {
-                    try {
-                        String tempInfo = pingResult.substring(pingResult.indexOf("ttl="));
-//                        LogUtil.d(TAG, "getTTL tempInfo: " + tempInfo);
-                        String s = String.valueOf(tempInfo.subSequence(tempInfo.indexOf("=") + 1, tempInfo.indexOf(" ")));
-                        return s;
-                    } catch (Exception e) {
-                    }
-                }
-                return PING_FAIL_RESULT;
-            }
-
-            @Override
-            public String onPingFailure() {
-                return PING_FAIL_RESULT;
-            }
-        });
-        return PING_FAIL_RESULT;
-    }
-
-    /**
-     * get time used in ping
-     * @param url
-     * @return
-     */
-    public static String getElapseTime(String url) {
-        String domain = getDomain(url);
-        if (null == domain) {
-            return null;
-        }
-        ping(createSimplePingCommand(1, 100, domain), new OnPingResult() {
-            @Override
-            public String onPingSuccess(String pingResult) {
-                if (null != pingResult) {
-                    try {
-                        String tempInfo = pingResult.substring(pingResult.indexOf("time="));
-//                        LogUtil.d(TAG, "getElapsedTime tempInfo: " + tempInfo);
-                        String s = String.valueOf(tempInfo.subSequence(tempInfo.indexOf("=") + 1, tempInfo.indexOf(" ")));
-                        return s;
-                    } catch (Exception e) {
-                    }
-                }
-                return PING_FAIL_RESULT;
-            }
-
-            @Override
-            public String onPingFailure() {
-                return PING_FAIL_RESULT;
-            }
-        });
-        return PING_FAIL_RESULT;
     }
 
     public static int getMaxTTL(String pingResult) {
@@ -278,7 +195,7 @@ public class PingUtil {
     }
 
     public static String getPacketLoss(String ip, int count, int timeout) {
-        ping(createSimplePingCommand(count, timeout, ip), new OnPingResult() {
+        asyncPing(createSimplePingCommand(count, timeout, ip), new OnPingResultListener() {
             @Override
             public String onPingSuccess(String pingResult) {
                 if (null != pingResult) {
@@ -315,7 +232,7 @@ public class PingUtil {
 //        return Pattern.matches(regex, string);
 //    }
 
-    private static void ping(final String command, final OnPingResult onPingResultListener) {
+    private static void asyncPing(final String command, final OnPingResultListener onPingResultListenerListener) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -332,9 +249,9 @@ public class PingUtil {
                     }
                     reader.close();
                     is.close();
-                    onPingResultListener.onPingSuccess(sb.toString());
+                    onPingResultListenerListener.onPingSuccess(sb.toString());
                 } catch (IOException e) {
-                    onPingResultListener.onPingFailure();
+                    onPingResultListenerListener.onPingFailure();
                     e.printStackTrace();
                 } finally {
                     if (null != process) {
@@ -349,7 +266,7 @@ public class PingUtil {
         return "/system/bin/ping -c " + count + " -w " + timeout + " " + domain;
     }
 
-    public interface OnPingResult {
+    public interface OnPingResultListener {
 
         String onPingSuccess(String pingResult);
 
