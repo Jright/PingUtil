@@ -233,7 +233,8 @@ public class PingUtil {
 //    }
 
     private static void asyncPing(final String command, final OnPingResultListener onPingResultListenerListener) {
-        new Thread(new Runnable() {
+        //TODO Possible Memory Leakage
+        Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 Process process = null;
@@ -259,7 +260,8 @@ public class PingUtil {
                     }
                 }
             }
-        }).run();
+        });
+        thread.run();
     }
 
     private static String createSimplePingCommand(int count, int timeout, String domain) {
